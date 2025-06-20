@@ -2,6 +2,8 @@
 
 This project provides a simple graphical user interface (GUI) application to convert HEIC images to PDF or JPEG format. It uses Pillow and pillow-heif for image processing.
 
+![Alt text](https://github.com/ashoover/heic2pdf/blob/main/screenshot/heic2pdf.png "Windows Screenshot")
+
 ## Features
 
 - Load all `.heic` files from a selected directory.
