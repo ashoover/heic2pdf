@@ -1,12 +1,13 @@
 # HEIC to PDF Converter (HEIC2PDF)
 
-This project provides a simple graphical user interface (GUI) application to convert HEIC images to PDF format. It uses Pillow and pillow-heif for image processing.
+This project provides a simple graphical user interface (GUI) application to convert HEIC images to PDF or JPEG format. It uses Pillow and pillow-heif for image processing.
 
 ## Features
 
-- Convert HEIC files to PDF
-- Simple GUI for file selection and conversion
-- Works on Windows, macOS, and Linux
+- Load all `.heic` files from a selected directory.
+- Select multiple files from a list for conversion.
+- Convert to either PDF or JPEG format.
+- Works on Windows, macOS, and Linux.
 
 ## Requirements
 
@@ -23,4 +24,4 @@ This project provides a simple graphical user interface (GUI) application to con
    cd heic2pdf
 
 ## Binary
-An .exe has been built using pyinstaller and is located in the dist directory
+A windows binary (.exe) has been built using pyinstaller and is located in the dist directory

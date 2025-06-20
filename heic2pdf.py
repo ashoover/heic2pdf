@@ -1,84 +1,80 @@
 import os
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, Listbox, StringVar, END
 from PIL import Image
 from pillow_heif import register_heif_opener
 
 # Register HEIF opener with Pillow
 register_heif_opener()
 
-def heic_to_pdf(heic_file):
-    """Convert a HEIC file to PDF and save in the same directory."""
-    try:
-        # Open the HEIC image using Pillow
-        image = Image.open(heic_file)
-
-        # Convert the image to RGB mode if it's not already
-        if image.mode != 'RGB':
-            image = image.convert('RGB')
-
-        # Get the directory of the HEIC file
-        dir_path = os.path.dirname(heic_file)
-        base_name = os.path.basename(heic_file).replace('.heic', '.pdf')
-        pdf_file = os.path.join(dir_path, base_name)
-
-        # Save as PDF
-        image.save(pdf_file, 'PDF', resolution=100.0)
-
-        return pdf_file
-
-    except Exception as e:
-        messagebox.showerror("Error", f"Failed to convert {heic_file}: {str(e)}")
-        return None
-
-def select_file():
-    """Open file dialog to select a HEIC file."""
-    heic_file = filedialog.askopenfilename(
-        title="Select HEIC File",
-        filetypes=[("HEIC files", "*.heic")]
-    )
-    if heic_file:
-        entry_var.set(heic_file)
-
-def on_drop(event):
-    """Handle file drop event."""
-    heic_file = event.data
-    if heic_file.lower().endswith('.heic'):
-        entry_var.set(heic_file)
-
-def convert():
-    """Convert the selected HEIC file to PDF."""
-    heic_file = entry_var.get()
-    if not heic_file or not os.path.isfile(heic_file):
-        messagebox.showwarning("Warning", "Please select a valid HEIC file.")
+def load_files():
+    """Load all .heic files from the selected directory."""
+    global heic_directory
+    heic_directory = filedialog.askdirectory(title="Select Directory")
+    if not heic_directory:
         return
 
-    pdf_file = heic_to_pdf(heic_file)
-    if pdf_file:
-        messagebox.showinfo("Success", f"Converted to {pdf_file}")
+    heic_files = [f for f in os.listdir(heic_directory) if f.lower().endswith('.heic')]
+    listbox.delete(0, END)
+    for file in heic_files:
+        listbox.insert(END, file)
+
+def convert_selected_files():
+    """Convert the selected files to PDF or JPEG."""
+    selected_files = [listbox.get(i) for i in listbox.curselection()]
+    if not selected_files:
+        messagebox.showwarning("Warning", "Please select at least one file.")
+        return
+
+    output_format = format_var.get()
+
+    for filename in selected_files:
+        try:
+            # Open the HEIC image using Pillow
+            heic_path = os.path.join(heic_directory, filename)
+            with Image.open(heic_path) as image:
+                if output_format == "PDF":
+                    pdf_filename = filename.replace('.heic', '.pdf')
+                    pdf_path = os.path.join(heic_directory, pdf_filename)
+                    image.save(pdf_path, 'PDF', resolution=100.0)
+
+                elif output_format == "JPEG":
+                    jpeg_filename = filename.replace('.heic', '.jpeg')
+                    jpeg_path = os.path.join(heic_directory, jpeg_filename)
+                    if image.mode != 'RGB':
+                        image = image.convert('RGB')
+                    image.save(jpeg_path, 'JPEG')
+
+                messagebox.showinfo("Success", f"Converted {filename} to {output_format.lower()}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to convert {filename}: {e}")
 
 def create_gui():
     """Create the Tkinter GUI."""
-    root = tk.Tk()
-    root.title("HEIC to PDF Converter")
+    global listbox, format_var
 
-    # Create and place widgets
+    root = tk.Tk()
+    root.title("HEIC Converter")
+
     frame = tk.Frame(root, padx=10, pady=10)
     frame.pack(padx=10, pady=10)
 
-    label = tk.Label(frame, text="Select HEIC file:")
-    label.grid(row=0, column=0, sticky="w")
+    load_button = tk.Button(frame, text="Load HEIC Files", command=load_files)
+    load_button.grid(row=0, columnspan=3, pady=(0, 10))
 
-    global entry_var
-    entry_var = tk.StringVar()
-    entry = tk.Entry(frame, width=50, textvariable=entry_var)
-    entry.grid(row=0, column=1)
+    listbox = Listbox(frame, width=50, height=15, selectmode=tk.MULTIPLE)
+    listbox.grid(row=1, columnspan=3, pady=(0, 10))
 
-    browse_button = tk.Button(frame, text="Browse...", command=select_file)
-    browse_button.grid(row=0, column=2, padx=5)
+    format_var = StringVar()
+    format_var.set("PDF")
+    format_label = tk.Label(frame, text="Convert to:")
+    format_label.grid(row=2, column=0, sticky="w")
 
-    convert_button = tk.Button(frame, text="Convert", command=convert)
-    convert_button.grid(row=1, columnspan=3, pady=10)
+    format_menu = tk.OptionMenu(frame, format_var, "PDF", "JPEG")
+    format_menu.grid(row=2, column=1, padx=(5, 0))
+
+    convert_button = tk.Button(frame, text="Convert Selected Files", command=convert_selected_files)
+    convert_button.grid(row=3, columnspan=3, pady=10)
 
     root.mainloop()
 
